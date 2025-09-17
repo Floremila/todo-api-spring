@@ -3,6 +3,7 @@ package com.example.todos.controller;
 import com.example.todos.domain.Todo;
 import com.example.todos.dto.CreateTodoRequest;
 import com.example.todos.dto.TodoResponse;
+import com.example.todos.dto.UpdateTodoRequest;
 import com.example.todos.service.TodoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,17 @@ public class TodoController {
                                                    @RequestParam(required=false) Todo.Status status,
                                                    @RequestParam(required=false) LocalDate dueBefore){
         return ResponseEntity.ok(svc.list(userId, status, dueBefore));
+    }
+
+    @PatchMapping("/todos/{id}")
+    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateTodoRequest req){
+        return ResponseEntity.of(svc.update(id, req)); // 200 si existe, 404 si no
+    }
+
+    @DeleteMapping("/todos/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id){
+        return svc.delete(id) ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }
 
