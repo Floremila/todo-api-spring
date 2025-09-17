@@ -36,7 +36,7 @@ public class TodoController {
     }
 
     @PatchMapping("/todos/{id}")
-    public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody UpdateTodoRequest req){
+    public ResponseEntity<TodoResponse> update(@PathVariable UUID id, @RequestBody UpdateTodoRequest req){
         return ResponseEntity.of(svc.update(id, req)); // 200 si existe, 404 si no
     }
 
