@@ -15,7 +15,9 @@ import java.util.UUID;
 @RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService svc;
-    public UserController(UserService svc){ this.svc = svc; }
+    public UserController(UserService svc) {
+        this.svc = svc;
+    }
 
     @PostMapping
     public ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest req){
