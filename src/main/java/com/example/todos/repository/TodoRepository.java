@@ -10,5 +10,6 @@ public interface TodoRepository extends JpaRepository<Todo, UUID> {
     List<Todo> findByUserId(UUID userId);
     List<Todo> findByUserIdAndStatus(UUID userId, Todo.Status status);
     List<Todo> findByUserIdAndDueDateBefore(UUID userId, LocalDate dueBefore);
+    List<Todo> findByUserIdAndStatusAndDueDateBefore(UUID userId, Todo.Status status, LocalDate dueBefore);
 }
 

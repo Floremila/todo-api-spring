@@ -36,14 +36,21 @@ public class TodoService {
 
     @Transactional(readOnly = true)
     public List<TodoResponse> list(UUID userId, Todo.Status status, LocalDate dueBefore){
+        if (status != null && dueBefore != null) {
+            return todoRepo.findByUserIdAndStatusAndDueDateBefore(userId, status, dueBefore)
+                    .stream().map(this::toResp).toList();
+        }
         if (status != null) {
-            return todoRepo.findByUserIdAndStatus(userId, status).stream().map(this::toResp).toList();
+            return todoRepo.findByUserIdAndStatus(userId, status)
+                    .stream().map(this::toResp).toList();
         }
         if (dueBefore != null) {
-            return todoRepo.findByUserIdAndDueDateBefore(userId, dueBefore).stream().map(this::toResp).toList();
+            return todoRepo.findByUserIdAndDueDateBefore(userId, dueBefore)
+                    .stream().map(this::toResp).toList();
         }
         return todoRepo.findByUserId(userId).stream().map(this::toResp).toList();
     }
+
 
     private TodoResponse toResp(Todo t){
         return new TodoResponse(
