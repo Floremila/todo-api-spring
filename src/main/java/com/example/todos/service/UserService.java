@@ -13,7 +13,9 @@ import java.util.UUID;
 @Service @Transactional
 public class UserService {
     private final UserRepository repo;
-    public UserService(UserRepository repo){ this.repo = repo; }
+    public UserService(UserRepository repo) {
+        this.repo = repo;
+    }
 
     public UserResponse create(CreateUserRequest req){
         User u = new User();
