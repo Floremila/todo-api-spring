@@ -3,6 +3,7 @@ package com.example.todos.service;
 import com.example.todos.domain.Todo;
 import com.example.todos.dto.CreateTodoRequest;
 import com.example.todos.dto.TodoResponse;
+import com.example.todos.dto.UpdateTodoRequest;
 import com.example.todos.repository.TodoRepository;
 import com.example.todos.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,23 @@ public class TodoService {
     public TodoService(TodoRepository todoRepo, UserRepository userRepo) {
         this.todoRepo = todoRepo;
         this.userRepo = userRepo;
+    }
+
+
+    public Optional<TodoResponse> update(UUID id, UpdateTodoRequest req){
+        return todoRepo.findById(id).map(t -> {
+            req.title().ifPresent(t::setTitle);
+            req.description().ifPresent(t::setDescription);
+            req.status().ifPresent(t::setStatus);
+            req.dueDate().ifPresent(t::setDueDate);
+            return toResp(todoRepo.save(t));
+        });
+    }
+
+    public boolean delete(UUID id){
+        if (!todoRepo.existsById(id)) return false;
+        todoRepo.deleteById(id);
+        return true;
     }
 
     public Optional<TodoResponse> create(UUID userId, CreateTodoRequest req){
