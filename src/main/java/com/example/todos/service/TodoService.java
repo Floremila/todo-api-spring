@@ -18,7 +18,8 @@ public class TodoService {
     private final UserRepository userRepo;
 
     public TodoService(TodoRepository todoRepo, UserRepository userRepo) {
-        this.todoRepo = todoRepo; this.userRepo = userRepo;
+        this.todoRepo = todoRepo;
+        this.userRepo = userRepo;
     }
 
     public Optional<TodoResponse> create(UUID userId, CreateTodoRequest req){
