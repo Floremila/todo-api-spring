@@ -52,10 +52,7 @@ curl -i -X DELETE http://localhost:8080/api/v1/todos/$TODO_ID
 
 In this project we learned to:
 
-Design clear REST endpoints using ResponseEntity and proper status codes (200/201/204/404).
-
-Use DTO records and validation; handle Optional to express 200/404 semantics.
-
-Persist with Spring Data JPA, using H2 for development.
-
-Plan and collaborate with GitHub Issues/Milestones/Projects, work on feature branches, open Pull Requests, and iterate from automated feedback (e.g., Copilot).
+- Design clear REST endpoints using ResponseEntity and proper status codes (200/201/204/404).
+- Use DTO records and validation; handle Optional to express 200/404 semantics.
+- Persist with Spring Data JPA, using H2 for development.
+- Plan and collaborate with GitHub Issues/Milestones/Projects, work on feature branches, open Pull Requests, and iterate from automated feedback (e.g., Copilot).
