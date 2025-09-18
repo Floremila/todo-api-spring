@@ -9,7 +9,7 @@ A small REST web service to manage **Users** and their **Todos** (create, list, 
 # App: http://localhost:8080
 # Swagger UI: http://localhost:8080/swagger-ui.html
 
-API EXEMPLES:
+API EXAMPLES:
 
 USERS
 # Create user
