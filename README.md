@@ -47,6 +47,36 @@ curl -s -X PATCH http://localhost:8080/api/v1/todos/$TODO_ID \
 # Delete
 curl -i -X DELETE http://localhost:8080/api/v1/todos/$TODO_ID
 
+Errors & Validation
+
+The API uses Bean Validation (@Valid) and a global @ControllerAdvice to return consistent JSON error responses with proper HTTP status codes.
+
+Status codes used: 201 Created, 200 OK, 204 No Content, 400 Bad Request, 404 Not Found, 409 Conflict.
+
+404 is returned when a resource doesn’t exist (e.g., unknown userId/todoId).
+
+409 is returned on unique constraint violations (duplicate username/email).
+
+Typical error JSON
+
+{
+  "timestamp": "2025-09-21T12:34:56.789Z",
+  "status": 400,
+  "error": "Bad Request",
+  "path": "/api/v1/users",
+  "message": "Validation failed"
+}
+
+400 – Bad Request (validation/type)
+
+Occurs when the request has missing/invalid fields or wrong types.
+
+Example
+
+curl -i -X POST "http://localhost:8080/api/v1/users" \
+  -H "Content-Type: application/json" \
+  -d '{ "username": "", "email": "not-an-email" }'
+
 
 
 
