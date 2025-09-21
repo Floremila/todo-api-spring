@@ -3,76 +3,51 @@ package com.example.todos.api;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
-                                                          HttpServletRequest req) {
-        Map<String, String> fields = new LinkedHashMap<>();
-        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
-            fields.put(fe.getField(), fe.getDefaultMessage());
-        }
-        var body = new ErrorResponse(
-                Instant.now(),
-                400,
-                "Bad Request",
-                "Validation failed",
-                req.getRequestURI(),
-                fields
-        );
-        return ResponseEntity.badRequest().body(body);
-    }
-
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException ex,
-                                                        HttpServletRequest req) {
-        var body = new ErrorResponse(
-                Instant.now(),
-                404,
-                "Not Found",
-                ex.getMessage(),
-                req.getRequestURI(),
-                null
-        );
-        return ResponseEntity.status(404).body(body);
+    public ResponseEntity<Map<String,Object>> handleValidation(MethodArgumentNotValidException ex,
+                                                               HttpServletRequest req) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "timestamp", Instant.now(),
+                "status", 400,
+                "error", "Bad Request",
+                "message", "Validation failed",
+                "path", req.getRequestURI()
+        ));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(DataIntegrityViolationException ex,
-                                                        HttpServletRequest req) {
-        var body = new ErrorResponse(
-                Instant.now(),
-                409,
-                "Conflict",
-                "Duplicate or constraint violation",
-                req.getRequestURI(),
-                null
-        );
-        return ResponseEntity.status(409).body(body);
+    public ResponseEntity<Map<String,Object>> handleConflict(DataIntegrityViolationException ex,
+                                                             HttpServletRequest req) {
+        return ResponseEntity.status(409).body(Map.of(
+                "timestamp", Instant.now(),
+                "status", 409,
+                "error", "Conflict",
+                "message", "Duplicate or constraint violation",
+                "path", req.getRequestURI()
+        ));
     }
 
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleOther(Exception ex, HttpServletRequest req) {
-        var body = new ErrorResponse(
-                Instant.now(),
-                500,
-                "Internal Server Error",
-                ex.getMessage(),
-                req.getRequestURI(),
-                null
-        );
-        return ResponseEntity.status(500).body(body);
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String,Object>> handleNotFound(NotFoundException ex,
+                                                             HttpServletRequest req) {
+        return ResponseEntity.status(404).body(Map.of(
+                "timestamp", Instant.now(),
+                "status", 404,
+                "error", "Not Found",
+                "message", ex.getMessage(),
+                "path", req.getRequestURI()
+        ));
     }
 }
+
 
