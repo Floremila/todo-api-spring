@@ -5,6 +5,8 @@ import com.example.todos.dto.CreateTodoRequest;
 import com.example.todos.dto.TodoResponse;
 import com.example.todos.dto.UpdateTodoRequest;
 import com.example.todos.service.TodoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -25,13 +27,18 @@ public class TodoController {
         this.svc = svc;
     }
 
+    @Operation(summary = "Create todo for a user")
+    @ApiResponse(responseCode = "201", description = "Todo created")
+    @ApiResponse(responseCode = "404", description = "User not found")
     @PostMapping("/users/{userId}/todos")
     public ResponseEntity<TodoResponse> create(@PathVariable UUID userId,
                                                @Valid @RequestBody CreateTodoRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(svc.create(userId, req));
     }
 
-
+    @Operation(summary = "List user todos (with filters & pagination)",
+            description = "Filters: status, dueBefore. Pagination: page, size. Sort: field,asc|desc (default dueDate,asc).")
+    @ApiResponse(responseCode = "200", description = "OK")
     @GetMapping("/users/{userId}/todos")
     public ResponseEntity<List<TodoResponse>> list(@PathVariable UUID userId,
                                                    @RequestParam(required = false) Todo.Status status,
@@ -50,12 +57,18 @@ public class TodoController {
                 .body(p.getContent());
     }
 
+    @Operation(summary = "Update todo (partial)")
+    @ApiResponse(responseCode = "200", description = "Updated")
+    @ApiResponse(responseCode = "404", description = "Todo not found")
     @PatchMapping("/todos/{id}")
     public ResponseEntity<TodoResponse> update(@PathVariable UUID id,
                                                @Valid @RequestBody UpdateTodoRequest req) {
         return ResponseEntity.ok(svc.update(id, req));
     }
 
+    @Operation(summary = "Delete todo")
+    @ApiResponse(responseCode = "204", description = "Deleted")
+    @ApiResponse(responseCode = "404", description = "Todo not found")
     @DeleteMapping("/todos/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         svc.delete(id);
