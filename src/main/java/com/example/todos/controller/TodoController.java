@@ -45,7 +45,7 @@ public class TodoController {
                                                    @RequestParam(required = false) LocalDate dueBefore,
                                                    @RequestParam(required = false) Integer page,
                                                    @RequestParam(required = false) Integer size,
-                                                   @RequestParam(required = false, defaultValue = "dueDate,asc") String sort) {
+                                                   @RequestParam(required = false) String sort) {
 
         Page<TodoResponse> p = svc.listPage(userId, status, dueBefore, page, size, sort);
 
