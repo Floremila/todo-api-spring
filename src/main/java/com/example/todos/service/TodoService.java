@@ -159,13 +159,6 @@ public class TodoService {
     }
 
 
-    public static record PageResult<T>(
-            List<T> content,
-            long totalElements,
-            int totalPages,
-            int page,
-            int size
-    ) {}
 }
 
 
