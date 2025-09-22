@@ -9,6 +9,7 @@ import com.example.todos.dto.UpdateTodoRequest;
 import com.example.todos.repository.TodoRepository;
 import com.example.todos.repository.UserRepository;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +30,9 @@ public class TodoService {
         this.userRepo = userRepo;
     }
 
-    /** M3: crear y lanzar 404 si el usuario no existe */
+
+
+
     public TodoResponse create(UUID userId, CreateTodoRequest req){
         User owner = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
@@ -39,7 +42,6 @@ public class TodoService {
         t.setTitle(req.title());
         t.setDescription(req.description());
         t.setDueDate(req.dueDate());
-        // valores por defecto / timestamps
         if (t.getStatus() == null) t.setStatus(Todo.Status.PENDING);
         t.setCreatedAt(Instant.now());
         t.setUpdatedAt(t.getCreatedAt());
@@ -48,7 +50,7 @@ public class TodoService {
         return toResp(t);
     }
 
-    /** M3: obtener 1; 404 si no existe */
+
     @Transactional(readOnly = true)
     public TodoResponse get(UUID id){
         return todoRepo.findById(id)
@@ -56,30 +58,49 @@ public class TodoService {
                 .orElseThrow(() -> new NotFoundException("Todo not found: " + id));
     }
 
-    /** Lista con filtros existentes (sin cambios) */
+
     @Transactional(readOnly = true)
-    public List<TodoResponse> list(UUID userId, Todo.Status status, LocalDate dueBefore){
-        if (status != null && dueBefore != null) {
-            return todoRepo.findByUserIdAndStatusAndDueDateBefore(userId, status, dueBefore)
-                    .stream().map(this::toResp).toList();
-        }
-        if (status != null) {
-            return todoRepo.findByUserIdAndStatus(userId, status)
-                    .stream().map(this::toResp).toList();
-        }
-        if (dueBefore != null) {
-            return todoRepo.findByUserIdAndDueDateBefore(userId, dueBefore)
-                    .stream().map(this::toResp).toList();
-        }
-        return todoRepo.findByUserId(userId).stream().map(this::toResp).toList();
+    public List<TodoResponse> list(UUID userId,
+                                   Todo.Status status,
+                                   LocalDate dueBefore,
+                                   Integer page,
+                                   Integer size,
+                                   String sort) {
+
+        Page<TodoResponse> pageResult = listPage(userId, status, dueBefore, page, size, sort);
+        return pageResult.getContent();
     }
 
-    /** M3: update parcial; 404 si no existe */
+
+    @Transactional(readOnly = true)
+    public Page<TodoResponse> listPage(UUID userId,
+                                       Todo.Status status,
+                                       LocalDate dueBefore,
+                                       Integer page,
+                                       Integer size,
+                                       String sort) {
+
+        Pageable pageable = buildPageable(page, size, sort);
+
+        Page<Todo> result;
+        if (status != null && dueBefore != null) {
+            result = todoRepo.findByUserIdAndStatusAndDueDateBefore(userId, status, dueBefore, pageable);
+        } else if (status != null) {
+            result = todoRepo.findByUserIdAndStatus(userId, status, pageable);
+        } else if (dueBefore != null) {
+            result = todoRepo.findByUserIdAndDueDateBefore(userId, dueBefore, pageable);
+        } else {
+            result = todoRepo.findByUserId(userId, pageable);
+        }
+
+        return result.map(this::toResp);
+    }
+
+
     public TodoResponse update(UUID id, UpdateTodoRequest req){
         Todo t = todoRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Todo not found: " + id));
 
-        // Si tu UpdateTodoRequest usa Optional<>, aplica como tenías:
         req.title().ifPresent(t::setTitle);
         req.description().ifPresent(t::setDescription);
         req.status().ifPresent(t::setStatus);
@@ -90,13 +111,38 @@ public class TodoService {
         return toResp(t);
     }
 
-    /** M3: delete con 1 round-trip; 404 si no existe */
+
     public void delete(UUID id){
         try {
             todoRepo.deleteById(id);
         } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException("Todo not found: " + id);
         }
+    }
+
+
+
+    private Pageable buildPageable(Integer page, Integer size, String sort) {
+        int p = (page == null || page < 0) ? 0 : page;
+        int s = (size == null || size <= 0 || size > 100) ? 20 : size;
+
+
+        Sort sortObj;
+        if (sort != null && sort.contains(",")) {
+            String[] parts = sort.split(",", 2);
+            String prop = parts[0].trim();
+            Sort.Direction dir = parts[1].trim().equalsIgnoreCase("desc")
+                    ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortObj = Sort.by(new Sort.Order(dir, prop));
+        } else if (sort != null && !sort.isBlank()) {
+            // Si viene solo el campo, usar ASC por defecto
+            sortObj = Sort.by(Sort.Direction.ASC, sort.trim());
+        } else {
+
+            sortObj = Sort.by(Sort.Direction.ASC, "dueDate");
+        }
+
+        return PageRequest.of(p, s, sortObj);
     }
 
     private TodoResponse toResp(Todo t){
@@ -111,6 +157,16 @@ public class TodoService {
                 t.getUpdatedAt()
         );
     }
+
+
+    public static record PageResult<T>(
+            List<T> content,
+            long totalElements,
+            int totalPages,
+            int page,
+            int size
+    ) {}
 }
+
 
 
