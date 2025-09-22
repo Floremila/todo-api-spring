@@ -77,6 +77,11 @@ curl -i -X POST "http://localhost:8080/api/v1/users" \
   -H "Content-Type: application/json" \
   -d '{ "username": "", "email": "not-an-email" }'
 
+### Docs
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Filtering & paging on: `GET /api/v1/users/{userId}/todos`
+  - Query params: `status`, `dueBefore`, `page`, `size`, `sort` (e.g., `dueDate,desc`)
+  - Response headers: `X-Total-Count`, `X-Total-Pages`, `X-Page`, `X-Size`
 
 
 
