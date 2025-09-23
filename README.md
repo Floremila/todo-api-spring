@@ -83,6 +83,19 @@ curl -i -X POST "http://localhost:8080/api/v1/users" \
   - Query params: `status`, `dueBefore`, `page`, `size`, `sort` (e.g., `dueDate,desc`)
   - Response headers: `X-Total-Count`, `X-Total-Pages`, `X-Page`, `X-Size`
 
+## M5 – Docker & PostgreSQL
+
+### Profiles
+- **dev** (H2 in-memory): local development.
+- **prod** (PostgreSQL): used in Docker Compose.
+
+### Run with Docker Compose (PostgreSQL)
+```bash
+docker compose build
+docker compose up -d
+# Health check (should return JSON OK)
+curl -s http://localhost:8080/api/v1/health
+
 
 
 In this project we learned to:
