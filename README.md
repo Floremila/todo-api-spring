@@ -96,6 +96,14 @@ docker compose up -d
 # Health check (should return JSON OK)
 curl -s http://localhost:8080/api/v1/health
 
+### Security & HTTPS (M6)
+- The app forces HTTPS and redirects HTTP (8080 → 8443).
+- Local dev Docker compose exposes:
+  - API (HTTPS): https://localhost:8443
+  - Redirect (HTTP): http://localhost:8080 → 302 to HTTPS
+- Swagger UI: https://localhost:8443/swagger-ui/index.html
+- Self-signed certificate is included for local use. In Postman, disable SSL verification or trust the cert.
+
 
 
 In this project we learned to:
