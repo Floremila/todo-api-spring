@@ -1,64 +1,124 @@
-# Todo API (Spring Boot)
+# ToDo API (Spring Boot)
 
-A small REST web service to manage **Users** and their **Todos** (create, list, partially update, delete).
+Small REST service to manage Users and their Todos.
+
+- **Stack**: Java 17, Spring Boot 3, Spring Data JPA, Swagger/OpenAPI.
+- **Profiles**: dev (H2, local) and prod (PostgreSQL via Docker Compose).
+- **Security (M6)**: HTTPS is enabled. HTTP :8080 redirects to HTTPS :8443.
+
+---
 
 ## How to start
+
+### Option A — Docker Compose (PostgreSQL + HTTPS)
+
 ```bash
-# Requirements: Java 17
+docker compose build
+docker compose up -d
+```
+
+### Health (HTTP redirects to HTTPS)
+
+```bash
+curl -i http://localhost:8080/api/v1/health
+curl -k https://localhost:8443/api/v1/health
+```
+
+- **API**: [https://localhost:8443](https://localhost:8443)
+- **Swagger UI**: [https://localhost:8443/swagger-ui/index.html](https://localhost:8443/swagger-ui/index.html)
+
+> *(Self-signed cert for local use — in Postman, disable SSL verification or trust the cert.)*
+
+---
+
+### Option B — Local dev (H2, no Docker)
+
+Requirements: Java 17 + Maven wrapper
+
+```bash
 ./mvnw spring-boot:run
-# App: http://localhost:8080
-# Swagger UI: http://localhost:8080/swagger-ui.html
+```
 
-API EXAMPLES:
+- **API**: [http://localhost:8080](http://localhost:8080)
+- **Swagger**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
-USERS
-# Create user
-curl -s -X POST http://localhost:8080/api/v1/users \
- -H "Content-Type: application/json" \
- -d '{"username":"flo","email":"flo@example.com"}'
+---
 
-# List users
+## API examples (cURL)
+
+### Users
+
+#### Create user
+```bash
+curl -s -X POST http://localhost:8080/api/v1/users -H "Content-Type: application/json" -d '{"username":"flo","email":"flo@example.com"}'
+```
+
+#### List users
+```bash
 curl -s http://localhost:8080/api/v1/users
+```
 
-# Get by id (replace <UUID>)
-curl -s http://localhost:8080/api/v1/users/<UUID>
+#### Get user by id
+```bash
+curl -s http://localhost:8080/api/v1/users/<USER_ID>
+```
 
-TODOS:
-# Assume USER_ID is a valid UUID
-USER_ID=<UUID>
+---
 
-# Create todo
-curl -s -X POST http://localhost:8080/api/v1/users/$USER_ID/todos \
- -H "Content-Type: application/json" \
- -d '{"title":"Buy milk","description":"2L","dueDate":"2025-09-30"}'
+### Todos (per user)
 
-# List (with optional filters)
+```bash
+USER_ID=<USER_ID>
+```
+
+#### Create todo
+```bash
+curl -s -X POST http://localhost:8080/api/v1/users/$USER_ID/todos -H "Content-Type: application/json" -d '{"title":"Buy milk","description":"2L","dueDate":"2025-10-01"}'
+```
+
+#### List todos (filters & paging supported)
+```bash
 curl -s "http://localhost:8080/api/v1/users/$USER_ID/todos"
 curl -s "http://localhost:8080/api/v1/users/$USER_ID/todos?status=PENDING"
 curl -s "http://localhost:8080/api/v1/users/$USER_ID/todos?dueBefore=2025-10-01"
-curl -s "http://localhost:8080/api/v1/users/$USER_ID/todos?status=PENDING&dueBefore=2025-10-01"
+curl -s "http://localhost:8080/api/v1/users/$USER_ID/todos?page=0&size=5&sort=dueDate,desc"
+```
 
-# Partial update (PATCH)
-TODO_ID=<TODO_UUID>
-curl -s -X PATCH http://localhost:8080/api/v1/todos/$TODO_ID \
- -H "Content-Type: application/json" \
- -d '{"status":"DONE"}'
+#### Update & Delete
 
-# Delete
+```bash
+TODO_ID=<TODO_ID>
+```
+
+##### Partial update (PATCH)
+```bash
+curl -s -X PATCH http://localhost:8080/api/v1/todos/$TODO_ID -H "Content-Type: application/json" -d '{"status":"DONE"}'
+```
+
+##### Delete
+```bash
 curl -i -X DELETE http://localhost:8080/api/v1/todos/$TODO_ID
+```
 
-Errors & Validation
+---
 
-The API uses Bean Validation (@Valid) and a global @ControllerAdvice to return consistent JSON error responses with proper HTTP status codes.
+### Response headers for paging
 
-Status codes used: 201 Created, 200 OK, 204 No Content, 400 Bad Request, 404 Not Found, 409 Conflict.
+- `X-Total-Count`
+- `X-Total-Pages`
+- `X-Page`
+- `X-Size`
 
-404 is returned when a resource doesn’t exist (e.g., unknown userId/todoId).
+---
 
-409 is returned on unique constraint violations (duplicate username/email).
+## Errors & Validation
 
-Typical error JSON
+- Bean Validation with `@Valid` + global `@ControllerAdvice` ⇒ consistent JSON error format.
+- Status codes used: **201 Created**, **200 OK**, **204 No Content**, **400 Bad Request**, **404 Not Found**, **409 Conflict**.
 
+**Typical error JSON**:
+
+```json
 {
   "timestamp": "2025-09-21T12:34:56.789Z",
   "status": 400,
@@ -66,49 +126,14 @@ Typical error JSON
   "path": "/api/v1/users",
   "message": "Validation failed"
 }
+```
 
-400 – Bad Request (validation/type)
+---
 
-Occurs when the request has missing/invalid fields or wrong types.
+## Short reflection
 
-Example
+This project helped me solidify how to design clear REST endpoints and apply the right HTTP status codes (200/201/204/404/409). We had already learned basic endpoint design in the IT & Information Security course, but here I focused on using the correct codes consistently and returning a uniform error JSON with validation messages, which improves the developer experience. I also enforced HTTPS with an HTTP→HTTPS redirect—small but valuable for security even in a student project.
 
-curl -i -X POST "http://localhost:8080/api/v1/users" \
-  -H "Content-Type: application/json" \
-  -d '{ "username": "", "email": "not-an-email" }'
+On the process side, working with GitHub Issues, Milestones, and Pull Requests kept the scope clear. From the Agile course on, I had used these tools, but this time I did it more carefully: feature branches, smaller and clearer commits, and one PR per milestone made reviews and fixes simpler and kept the repo organized.
 
-### Docs
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- Filtering & paging on: `GET /api/v1/users/{userId}/todos`
-  - Query params: `status`, `dueBefore`, `page`, `size`, `sort` (e.g., `dueDate,desc`)
-  - Response headers: `X-Total-Count`, `X-Total-Pages`, `X-Page`, `X-Size`
-
-## M5 – Docker & PostgreSQL
-
-### Profiles
-- **dev** (H2 in-memory): local development.
-- **prod** (PostgreSQL): used in Docker Compose.
-
-### Run with Docker Compose (PostgreSQL)
-```bash
-docker compose build
-docker compose up -d
-# Health check (should return JSON OK)
-curl -s http://localhost:8080/api/v1/health
-
-### Security & HTTPS (M6)
-- The app forces HTTPS and redirects HTTP (8080 → 8443).
-- Local dev Docker compose exposes:
-  - API (HTTPS): https://localhost:8443
-  - Redirect (HTTP): http://localhost:8080 → 302 to HTTPS
-- Swagger UI: https://localhost:8443/swagger-ui/index.html
-- Self-signed certificate is included for local use. In Postman, disable SSL verification or trust the cert.
-
-
-
-In this project we learned to:
-
-- Design clear REST endpoints using ResponseEntity and proper status codes (200/201/204/404).
-- Use DTO records and validation; handle Optional to express 200/404 semantics.
-- Persist with Spring Data JPA, using H2 for development.
-- Plan and collaborate with GitHub Issues/Milestones/Projects, work on feature branches, open Pull Requests, and iterate from automated feedback (e.g., Copilot).
+Finally, writing short acceptance criteria and providing Postman/cURL proofs aligned expectations quickly, and documenting “how to run” (local + Docker/Compose + HTTPS) reduced setup friction for anyone testing the service.  
